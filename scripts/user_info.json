@@ -1,2 +1,6 @@
-{'User_last_name': ADD_LAST_NAME_HERE,
- 'FritzToken': ADD_TOKEN_HERE}
+{
+  "user":
+    {"user_last_name": "ADD_USER_LAST_NAME_HERE",
+     "FritzToken": "ADD_FRITZ_TOKEN_HERE"
+    }
+}
