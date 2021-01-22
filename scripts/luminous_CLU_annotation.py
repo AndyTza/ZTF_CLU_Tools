@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Query the most recent ZTF CLU saved sources & check if they pass a luminosity threshold the default is -17.
 This code will leave an annotation in the format: [Luminous_CLU_Event]: True/False
