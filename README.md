@@ -16,7 +16,7 @@ fritz.scince API you will need to add to `/scripts/user_info.json` your last nam
 
 #### Running the `ZTF CLU Luminous Annotation`
 ____
-In ZTF Phase II, the ZTF CLU experiment will be a volume-luminosity-limited supernovae sample.
+In ZTF Phase II the ZTF CLU experiment will be a volume-luminosity-limited supernovae sample.
 
 This annotator will fetch the photometry of all sources saved to the Caltech ZTF CLU program (`program_id:43`) after the date indicated by the `-h` flag in format `YYYY-MM-DD`. The annotator will go through each source and annotate if they're luminous based on a specific luminosity cut (docs of `luminous_CLU_annotation.py` for more details). To run the ZTF CLU luminosity annotator, see the example below:
 
