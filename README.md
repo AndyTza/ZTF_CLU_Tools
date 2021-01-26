@@ -33,6 +33,5 @@ In the case one would like to asses the general properties of the ZTF CLU experi
 
 ```
 ./fetch_CLU_sources.py
-
 ```
-`Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me. 
+`Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me.
