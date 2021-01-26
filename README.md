@@ -5,7 +5,7 @@ ___
 ![Aitoff Projection of Discovered ZTF CLU Transients](https://github.com/AndyTza/andytza.github.io/blob/master/images/CLU_Map.png?raw=true)
 
 #### Getting Started
-____ 
+____
 
 Before running the ZTF CLU scripts, you will need to add your fritz.science credentials. To start using the
 fritz.scince API you will need to add to `/scripts/user_info.json` your last name and Command-Line Authentication Token:
@@ -31,9 +31,9 @@ This annotator will fetch the photometry of all sources saved to the Caltech ZTF
 
 #### Running the `Fetch ZTF CLU Catalog`
 ___
-In the case one would like to asses the general properties of the ZTF CLU experiment, the `fetch_CLU_souces.py` module is a quick method for downloading some basic parameters found in the ZTF CLU catalog (ascii table). The query returns the following parameters: `obj_id`, `saved_date`, `coordinates`, `redshift`, `CLU_d_gal` (seperation from CLU host in arcsec), `peak_absolute_magnitude`, `peak_apparent_magnitude`, `luminous_event`(boolean, if the source is luminous or sub-luminous give a -17 cut). To run the code, see example below:
+In the case one would like to asses the general properties of the ZTF CLU experiment, the `fetch_CLU_souces.py` module is a quick method for downloading some basic parameters found in the ZTF CLU catalog (ascii table). The query returns the following parameters: `obj_id`, `saved_date`, `coordinates`, `redshift`, `CLU_d_gal` (seperation from CLU host in arcsec), `peak_absolute_magnitude`, `peak_apparent_magnitude`, `luminous_event`(boolean, if the source is luminous or sub-luminous given a M_abs=-17 cut). To run the code, see example below:
 
 ```
-./fetch_CLU_sources.py
+./fetch_CLU_sources.py or python ./fetch_CLU_sources.py
 ```
 `Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me.
