@@ -34,6 +34,6 @@ ___
 In the case one would like to asses the general properties of the ZTF CLU experiment, the `fetch_CLU_souces.py` module is a quick method for downloading some basic parameters found in the ZTF CLU catalog (ascii table). The query returns the following parameters: `obj_id`, `saved_date`, `coordinates`, `redshift`, `CLU_d_gal` (seperation from CLU host in arcsec), `peak_absolute_magnitude`, `peak_apparent_magnitude`, `luminous_event`(boolean, if the source is luminous or sub-luminous given a M_abs=-17 cut). To run the code, see example below:
 
 ```
-./fetch_CLU_sources.py or python ./fetch_CLU_sources.py
+./fetch_CLU_sources.py
 ```
 `Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me.
