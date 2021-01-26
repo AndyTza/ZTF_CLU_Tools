@@ -4,6 +4,8 @@ ___
 
 ![Aitoff Projection of Discovered ZTF CLU Transients](https://github.com/AndyTza/andytza.github.io/blob/master/images/CLU_Map.png?raw=true)
 
+#### Getting Started
+____ 
 
 Before running the ZTF CLU scripts, you will need to add your fritz.science credentials. To start using the
 fritz.scince API you will need to add to `/scripts/user_info.json` your last name and Command-Line Authentication Token:
