@@ -17,7 +17,7 @@ today = date.today()
 warnings.filterwarnings('ignore')
 
 # Define global parameters
-global TOKEN, BASEURL, USR_LAST_NAME
+global TOKEN, BASEURL, USR_LAST_NAME, db
 
 with open('user_info.json') as usr:
     # User Infomation
@@ -27,13 +27,9 @@ GETTOKEN = usr_data['user']['FritzToken']
 USR_LAST_NAME = usr_data['user']['user_last_name']
 BASEURL = 'https://fritz.science/'
 
-global obj_id, saved_date, ra, dec, z, clu_d, classification, luminous_event, peak_app_mag, classification_prob, peak_abs_mag
-
-# List of Empty Parameters
-obj_id, saved_date, ra, dec = [], [], [], []
-z, clu_d = [], []
-classification, classification_prob = [], []
-luminous_event, peak_app_mag, peak_abs_mag = [], [], []
+# Empty dict.
+db = {}
+db['sources'] = []
 
 def api(method, endpoint, data=None):
     ''' Info : Basic API query, takes input the method (eg. GET, POST, etc.), the endpoint (i.e. API url)
@@ -240,7 +236,7 @@ def peak_mag_CLU(ztfname):
     except:
         return (None)
 
-def query_CLU(ZTF_name, saved_at):
+def query_CLU_dict(ZTF_name, saved_at):
     """
     This function will append the parameters of a given ZTF souce to the
     global parameters (see query output).
@@ -291,48 +287,55 @@ def query_CLU(ZTF_name, saved_at):
         # Find the indicies of the minimum distance(seperation in arcsec)
         find_nearest = np.argmin(clu_d_gal_sep)
 
-        z.append(clu_z[find_nearest])
-        clu_d.append(clu_d_gal_sep[find_nearest])
-
         # Check if luminous
         luminosity_info = CLU_luminous(ZTF_name, clu_z[find_nearest], luminosity_threshold=-17.0)
-        luminous_event.append(luminosity_info[0])
-        peak_abs_mag.append(luminosity_info[1])
+
+        # Assign parameters
+        param_z = clu_z[find_nearest]
+        param_clu_d = clu_d_gal_sep[find_nearest]
+        param_luminous_event = luminosity_info[0]
+        param_peak_abs_mag = luminosity_info[1]
 
     else:
-        z.append(source['redshift'])
-        clu_d.append(None)
-
         luminosity_info = CLU_luminous(ZTF_name, source['redshift'], luminosity_threshold=-17.0)
 
-        # Cannot run luminosity check....
-        luminous_event.append(luminosity_info[0])
-        peak_abs_mag.append(luminosity_info[1])
-
-
-    # Fetch the most *recent* classification
-    clf = source['classifications']
-
-    if clf:
-        classification.append(clf[-1]['classification']) # classification
-        classification_prob.append(clf[-1]['probability']) # classification probability 0-1
-    else:
-        classification.append(None)
-        classification_prob.append(None)
+        # Assign parameters
+        param_z = source['redshift']
+        param_clu_d = None
+        param_luminous_event = luminosity_info[0]
+        param_peak_abs_mag = luminosity_info[1]
 
     # Fetch peak apparent magnitudes
     peak_apparent_magnitude = peak_mag_CLU(ZTF_name)
 
     if peak_apparent_magnitude!=None:
-        peak_app_mag.append(peak_apparent_magnitude)
+        param_peak_app_mag = peak_apparent_magnitude
     else:
-        peak_app_mag.append(None)
+        param_peak_app_mag = None
 
-    # Append Parameters
-    obj_id.append(ZTF_name) # Obj_id of the ZTF source
-    saved_date.append(saved_at) # Date it was saved from
-    ra.append(source['ra']) # R.A coord
-    dec.append(source['dec']) # DEC coord
+    # Fetch the most *recent* classification
+    clf = source['classifications']
+
+    if clf:
+        param_classification = clf[-1]['classification']
+        param_prob = clf[-1]['probability']
+    else:
+        param_classification = None
+        param_prob = None
+
+    # Assign last parameters
+    param_obj_id = ZTF_name
+    param_saved_date = saved_at
+    param_ra = source['ra']
+    param_dec = source['dec']
+
+    # Extrapolate to main dict.
+    db['source'].append({"ZTF": param_obj_id, "saved_date": param_saved_date,
+                         "ra":param_ra, "dec":param_dec,
+                        "z": param_z, "clu_d": param_clu_d,
+                         "classification": param_classification, "probability": param_prob,
+                        "peak_abs_mag": param_peak_abs_mag,
+                         "luminous_event": str(param_luminous_event), "peak_app_mag": param_peak_app_mag})
 
 def main():
     sources = get_all_sources(43) # fetch all sources for ZTF CLU experiment
@@ -346,10 +349,10 @@ def main():
     for i in tqdm(range(len(names))):
         buff +=1
         if buff>=50: # feed to pool 50 sources a time
-            time.sleep(12) # sleep for ~12 seconds (for ~3000 sources this takes roughly 10 minutes)
+            time.sleep(13) # sleep for ~10 seconds (for ~3000 sources this takes roughly 10 minutes)
             buff = 0 # restart buffer
 
-        t = threading.Thread(target=query_CLU, args=[names[i], dates[i]])
+        t = threading.Thread(target=query_CLU_dict, args=[names[i], dates[i]])
         t.start()
         list_threads.append(t)
 
@@ -361,8 +364,21 @@ def main():
      "z", "clu_d_host", "classification", "classification_prob",
       "peak_app_mag", "peak_abs_mag", "luminous_event")
 
+    # Extrapolate from the dict. to list
+    obj_id = [s['ZTF'] for s in db['source']]
+    saved_date = [s['saved_date'] for s in db['source']]
+    ra = [s['ra'] for s in db['source']]
+    dec = [s['dec'] for s in db['source']]
+    z = [s['z'] for s in db['source']]
+    clu_d = [s['clu_d'] for s in db['source']]
+    classification = [s['classification'] for s in db['source']]
+    classification_prob = [s['probability'] for s in db['source']]
+    peak_app_mag = [s['peak_app_mag'] for s in db['source']]
+    peak_abs_mag = [s['peak_abs_mag'] for s in db['source']]
+    luminous_event = [s['luminous_event'] for s in db['source']]
+
     data_table = Table([obj_id, saved_date, ra, dec, z, clu_d,
-     classification,classification_prob, peak_app_mag, peak_abs_mag,
+     classification, classification_prob, peak_app_mag, peak_abs_mag,
      luminous_event], names=param_names)
 
     data_table.write(f"CLU_QUERY_{today.year}_{today.month}_{today.day}.ascii", format='ascii', overwrite=True)
