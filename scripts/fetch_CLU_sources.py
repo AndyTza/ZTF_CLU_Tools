@@ -29,7 +29,7 @@ BASEURL = 'https://fritz.science/'
 
 # Empty dict.
 db = {}
-db['sources'] = []
+db['source'] = []
 
 def api(method, endpoint, data=None):
     ''' Info : Basic API query, takes input the method (eg. GET, POST, etc.), the endpoint (i.e. API url)

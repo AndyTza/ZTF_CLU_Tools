@@ -272,15 +272,22 @@ def main(date_request):
             if c_id!=False: # found a comment
                 # Update this comment with it's given comment_id
                 update_comment = update_source_comment(c_id, f"[Luminous_CLU_Event] {lum_clu_check}", cand_id, usr_id)
+                # Summary of data posting!
+                print ("#######")
+                print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
+                print ("Luminosity Check:", lum_clu_check)
+                print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
+                print (" ")
                 print (f"Updated comment for {cand_id}")
             else:
                 # Post new comment
                 comment_poster = post_source_comment(cand_id, f"[Luminous_CLU_Event] {lum_clu_check}")
-
-            # Summary of data posting!
-            print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
-            print ("Luminosity Check:", lum_clu_check)
-            print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
+                # Summary of data posting!
+                print ("#######")
+                print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
+                print ("Luminosity Check:", lum_clu_check)
+                print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
+                print (" ")
 
 if __name__ == "__main__":
     main(args.date)
