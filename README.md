@@ -4,7 +4,7 @@ ___
 
 ![Aitoff Projection of Discovered ZTF CLU Transients](https://github.com/AndyTza/andytza.github.io/blob/master/images/CLU_Map.png?raw=true)
 
-#### Getting Started
+### Getting Started
 ____
 
 Before running the ZTF CLU scripts, you will need to add your fritz.science credentials. To start using the
@@ -38,4 +38,4 @@ In the case one would like to asses the general properties of the ZTF CLU experi
 ```
 `Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me.
 
-The resulting table will be stored in the `scripts/` directory was an ascii file marked by the date of the query. 
+The resulting table will be stored in the `scripts/` directory was an ascii file marked by the date of the query.
