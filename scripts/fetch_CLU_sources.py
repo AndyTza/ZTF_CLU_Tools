@@ -158,7 +158,10 @@ def get_source_photometry(ztfname, extrapolate_photometry=False):
         mag = [alert['mag'] for alert in phot if alert['mag']!=False]
         mag_err = [alert['magerr'] for alert in phot if alert['mag']!=False]
 
-        return (Table([mjd, filt, mag, mag_err], names=("mjd", "filter", 'mag', 'mag_err')))
+        if len(mag):
+            return (Table([mjd, filt, mag, mag_err], names=("mjd", "filter", 'mag', 'mag_err')))
+        else:
+            return (False)
     else:
         return (response['data'])
 
@@ -193,16 +196,18 @@ def CLU_luminous(ztfname, source_z, luminosity_threshold=-17.0):
         filt = photometry['filter'].data[nan_index]
         Mapp = photometry['mag'].data[nan_index]
         Mapp_err = photometry['mag_err'].data[nan_index]
-        phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
+        #phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
 
-        # Select peak in lightcurve (first maximum)
-        peak = np.argmin(Mabs)
-        peak_app = np.argmin(Mapp) # peak in apparent magnitude space
+        if len(filt):
+            # Select peak in lightcurve (first maximum)
+            peak = np.argmin(Mabs)
 
-        # Check if source is luminous by considering the absolute magnitude + error
-        is_luminous_error = (Mabs[peak] + Mapp_err[peak])<=luminosity_threshold
+            # Check if source is luminous by considering the absolute magnitude + error
+            is_luminous_error = (Mabs[peak] + Mapp_err[peak])<=luminosity_threshold
 
-        return (is_luminous_error, Mabs[peak])
+            return (is_luminous_error, Mabs[peak])
+        else:
+            return (False, None)
     else:
         return (False, None)
 
@@ -219,22 +224,41 @@ def peak_mag_CLU(ztfname):
     """
     # Query photometry
     photometry = get_source_photometry(ztfname, extrapolate_photometry=True)
+    if photometry: # if photometry table is not empty
+        try:
+            nan_index = photometry['mag'].data!=None # select index where no None's
 
-    try:
-        nan_index = photometry['mag'].data!=None # select index where no None's
+            # Lightcurve parameters
+            unq_filters = np.unique(photometry['filter'].data[nan_index])
+            filt = photometry['filter'].data[nan_index]
+            Mapp = photometry['mag'].data[nan_index]
+            Mapp_err = photometry['mag_err'].data[nan_index]
+            phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
 
-        # Lightcurve parameters
-        unq_filters = np.unique(photometry['filter'].data[nan_index])
-        filt = photometry['filter'].data[nan_index]
-        Mapp = photometry['mag'].data[nan_index]
-        Mapp_err = photometry['mag_err'].data[nan_index]
-        phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
+            # Try to get the peak magnitude in r-band, if r-band does not exist, any other photometry is okay
+            contain_red, contain_green, contain_i = False, False, False
+            for f in filt:
+                if f=="ztfr": # rband
+                    contain_red = True
+                elif f=='ztfg':
+                    contain_green = True
+                elif f=='ztfi':
+                    contain_i = True
 
-        peak_app = np.argmin(Mapp) # peak in apparent magnitude space
+            if contain_red==True:
+                Mapp_phot_band = Mapp[filt=='ztfr']
+            elif contain_red==False and contain_green==True:
+                Mapp_phot_band = Mapp[filt=='ztfg']
+            elif contain_red==False and contain_green==False and contain_i==True:
+                Mapp_phot_band = Mapp[filt=='ztfi']
 
-        return Mapp[peak_app]
-    except:
-        return (None)
+            peak_app = np.argmin(Mapp_phot_band) # peak in apparent magnitude space
+
+            return Mapp_phot_band[peak_app]
+        except:
+            return (None)
+    else:
+        return (False)
 
 def query_CLU_dict(ZTF_name, saved_at):
     """
