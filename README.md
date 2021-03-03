@@ -39,3 +39,13 @@ In the case one would like to asses the general properties of the ZTF CLU experi
 `Note`: It roughly takes ~10 minutes to generate a table of ~3000 sources. If you would like more parameters to be added please make a PR or contact me.
 
 The resulting table will be stored in the `scripts/` directory was an ascii file marked by the date of the query.
+
+
+#### Running the `Upload ZTF Source 2Frtiz`
+___
+In the case you would like to upload a list of ZTF sources given their ZTF ids. The current version of `upload_ztf_source_2fritz.py` can upload and save sources to fritz assigned to a specific group. We ask that the user adds to key flags: `-g` for the group number they're assigning the source, and `-f` for the .txt file name containing all the sources. `Note`: The .txt file (that should be in the same directory as your upload_ztf_source_2fritz.py file) does not require a header.
+To run the code, see example below:
+```
+python upload_ztf_source_2fritz.py -f 43 -g ztf_ids.txt
+```
+the above example will upload and save all sources in ztf_ids.txt file to group_id:43
