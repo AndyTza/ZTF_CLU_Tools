@@ -315,8 +315,8 @@ def query_CLU_dict(ZTF_name, saved_at):
         luminosity_info = CLU_luminous(ZTF_name, clu_z[find_nearest], luminosity_threshold=-17.0)
 
         # Assign parameters
-        param_z = clu_z[find_nearest]
-        param_clu_d = clu_d_gal_sep[find_nearest]
+        param_z = float(clu_z[find_nearest])
+        param_clu_d = float(clu_d_gal_sep[find_nearest])
         param_luminous_event = luminosity_info[0]
         param_peak_abs_mag = luminosity_info[1]
 
@@ -324,7 +324,7 @@ def query_CLU_dict(ZTF_name, saved_at):
         luminosity_info = CLU_luminous(ZTF_name, source['redshift'], luminosity_threshold=-17.0)
 
         # Assign parameters
-        param_z = source['redshift']
+        param_z = float(source['redshift'])
         param_clu_d = None
         param_luminous_event = luminosity_info[0]
         param_peak_abs_mag = luminosity_info[1]
