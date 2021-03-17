@@ -243,7 +243,7 @@ def get_user_id(last_name, group_id=43):
     usr_id = [user['id'] for user in response['data']['users'] if user['last_name']==last_name]
 
     if usr_id:
-        return (usr_id)
+        return (usr_id[0])
     else:
         return (False)
 
