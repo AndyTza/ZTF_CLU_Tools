@@ -93,8 +93,7 @@ def get_source_photometry(ztfname, extrapolate_photometry=False):
 
 def fetch_redshift(ztfname):
     """
-    Fetch the source redshift from the source. If no redshift has been indicated on frtiz.science
-    this function will return False.
+    Fetch the redshift of the nearest CLU galaxy (via CLU-auto-annoation). If not, will query the current redshift entry on Fritz.science
 
     Input:
     -----
@@ -104,11 +103,43 @@ def fetch_redshift(ztfname):
     -----
     redshift (float): If redshift has been found on on fritz.science - or False (bool) if no redshift is found
     """
-    z = get_source_api(ztfname)['redshift'] # fetch source redshift
-    if z:
-        return (z)
+
+    source = get_source_api(ztfname, comments=False) # Fetch source infomation
+
+    # Extrapolate CLU Redshift with the nearest crossmatch
+    source_annotation = source['annotations'] # Fetch annotations
+    clu_z, clu_d_gal_sep = [], []
+    for annotation in source_annotation:
+        annotation_data = annotation['data']
+        for key in annotation_data.keys():
+            if key=="cross_matches_CLU":
+                for CLUdata in annotation_data['cross_matches_CLU']:
+                    try:
+                        clu_z.append(CLUdata['z'])
+                        clu_d_gal_sep.append((CLUdata['coordinates'])['distance_arcsec'])
+                    except:
+                        if source['redshift']:
+                            clu_z.append(source['redshift'])
+                            clu_d_gal_sep.append(False)
+                        else:
+                            clu_z.append(False)
+                            clu_d_gal_sep.append(False)
+
+    # If the list has found redshift and seperation
+    if len(clu_z)>0:
+        clu_z, clu_d_gal_sep = np.array(clu_z), np.array(clu_d_gal_sep)
+
+        # Nearest cross-match to CLU
+        find_nearest = np.argmin(clu_d_gal_sep)
+
+        return (clu_z[find_nearest])
+
     else:
-        return (False)
+        z = get_source_api(ztfname)['redshift'] # fetch source redshift
+        if z:
+            return (z)
+        else:
+            return (False)
 
 def dist_mod_mag(app_mag, distance):
     """
@@ -172,10 +203,20 @@ def CLU_luminous(ztfname, luminosity_threshold=-17.0):
         filt = photometry['filter'].data[nan_index]
         Mapp = photometry['mag'].data[nan_index]
         Mapp_err = photometry['mag_err'].data[nan_index]
-        phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
 
-        # Select peak in lightcurve (first maximum)
-        peak = np.argmin(Mabs)
+        try:
+            if len(photometry['mjd'].data[nan_index])>0:
+                phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index][0]
+            else:
+                phase = photometry['mjd'].data[nan_index] - photometry['mjd'].data[nan_index] # likely only one detection
+        except:
+            return (False) # it failed at this step...
+
+        try:
+            # Select peak in lightcurve (first maximum)
+            peak = np.argmin(Mabs)
+        except:
+            return (False)
 
         # Check if source is luminous by considering the absolute magnitude + error
         is_luminous_error = (Mabs[peak] + Mapp_err[peak])<=luminosity_threshold
@@ -243,26 +284,32 @@ def get_user_id(last_name, group_id=43):
     usr_id = [user['id'] for user in response['data']['users'] if user['last_name']==last_name]
 
     if usr_id:
-        return (usr_id[0])
+        return (usr_id)
     else:
         return (False)
 
 def main(date_request):
     # Fetch the user ID
     usr_id = get_user_id(USR_LAST_NAME, group_id=43)
+    print (f"This is my user id: {usr_id}")
 
     # Fetch all CLU sources
     all_clu_sources = get_all_sources(43)
 
     # Define Start Date you want to query
-    t_start_query  = Time(date_request)
-
-    for source in all_clu_sources['data']['sources']:
+    t_start_query  = Time(date_request, format='iso')
+    counter = 0 # Counter for a buffer time
+    for source in tqdm(all_clu_sources['data']['sources']):
         T = Time(source['saved_at']) # as astropy.time
 
         if T>=t_start_query: # if this is greater or equal to the date
             cand_id, date_id = source['obj_id'], source['saved_at']
+            counter += 1
 
+            if counter>=30:
+                counter = 0 # restart counter...
+                time.sleep(10) # sleep for 10 seconds...
+            print (f"Checking: {cand_id}")
             # Check photometry and return boolean if luminous or not (i.e TRUE/FALSE)
             lum_clu_check = CLU_luminous(cand_id, luminosity_threshold=-17.0)
 
@@ -271,23 +318,20 @@ def main(date_request):
 
             if c_id!=False: # found a comment
                 # Update this comment with it's given comment_id
-                update_comment = update_source_comment(c_id, f"[Luminous_CLU_Event] {lum_clu_check}", cand_id, usr_id)
-                # Summary of data posting!
-                print ("#######")
-                print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
-                print ("Luminosity Check:", lum_clu_check)
-                print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
+                update_comment = update_source_comment(c_id, f"[Luminous_CLU_Event] {lum_clu_check}", cand_id, usr_id[0])
+                print (f"comment status was: {update_comment['status']}")
+                print (f"Updated comment for {cand_id} to {lum_clu_check}")
                 print (" ")
-                print (f"Updated comment for {cand_id}")
+
             else:
                 # Post new comment
                 comment_poster = post_source_comment(cand_id, f"[Luminous_CLU_Event] {lum_clu_check}")
-                # Summary of data posting!
-                print ("#######")
-                print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
-                print ("Luminosity Check:", lum_clu_check)
-                print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
-                print (" ")
+
+            # Summary of data posting!
+            print ("Checking luminosity of source ", cand_id, "stored at ", date_id)
+            print ("Luminosity Check:", lum_clu_check)
+            print (f"fritz.science URL: https://fritz.science/source/{cand_id}")
+            print (" ")
 
 if __name__ == "__main__":
     main(args.date)
